@@ -4,6 +4,7 @@ class OpenAPI{
 
     this.wrapper = document.querySelector('.wrapper');
     this.wrapperSection = document.querySelector('.wrapper_sections');
+    this.wrapperSchemas = document.querySelector('.schemas_list');
 
     this.data = JSON.parse(this._config.data);
 
@@ -16,17 +17,19 @@ class OpenAPI{
     console.log(this.data);
     await this.setupInfos();
     this.makeContent();
-    this.toggleSection();
+    this.makeSchemas();
   }
 
   // Setup
   async setupInfos() {
     const title = document.querySelector(".wrapper_header_title"),
-    version = document.querySelector(".wrapper_header_version");
+    version = document.querySelector(".wrapper_header_version"),
+    description = document.querySelector(".wrapper_header_description");
 
     if (title && version) {
       title.innerHTML = this.data["info"]["title"];
       version.innerHTML = `Version: ${this.data["info"]["version"]}`;
+      description.innerHTML = this.data["info"]["description"];
       this.setupPaths();
     }
   }
@@ -125,6 +128,7 @@ class OpenAPI{
         }
       }
     }
+    this.toggleSection();
   }
   toggleSection() {
     const section = document.querySelectorAll(".section_content_item_inner");
@@ -134,6 +138,85 @@ class OpenAPI{
       const body = item.querySelector(".section_content_item_body");
 
       // body
+      const height = body.getBoundingClientRect().height;
+      body.setAttribute("data-height", height);
+      body.style.height = "0px";
+
+      // header
+      header.addEventListener("click", () => {
+        const height = body.getAttribute("data-height");
+        const active = item.classList.contains("active");
+
+        if (active) {
+          body.style.height = "0px";
+          item.classList.remove("active");
+        } else {
+          body.style.height = `${height}px`;
+          item.classList.add("active");
+        }
+      });
+    });
+  }
+
+  makeSchemas() {
+    const Shtml = `
+      <div class="schemas_list_item">
+        <div class="schemas_header">
+          <span>__name__</span>
+          <i class='bx bx-chevron-down'></i>
+        </div>
+        <div class="schemas_content">
+          <div class="desc_entity">__description__</div>
+          <table class="schemas_property">
+            <tbody class="schemas_property_tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const Phtml = `
+      <tr>
+        <td class="name">__propertyname__</td>
+        <td class="infos">
+          <span class="type">__propertype__</span>
+          <span class="more">__propertymore__</span>
+          <span class="desc">__propertydesc__</span>
+        </td>
+      </tr>
+    `;
+
+    const schemas = this.data["components"]["schemas"];
+    for (const key in schemas) {
+      if (Object.hasOwnProperty.call(schemas, key)) {
+        const value = schemas[key];
+        let schemasHTML = this.formatStringToHTMLInArray(Shtml, '__name__', key);
+        schemasHTML = this.formatStringToHTML(schemasHTML, '__description__', value["description"]);
+        this.wrapperSchemas.appendChild(schemasHTML);
+
+        const properties = value["properties"];
+        for (const key in properties) {
+          if (Object.hasOwnProperty.call(properties, key)) {
+            const property = properties[key];
+            let propertiesHTML = this.formatStringToHTMLInArray(Phtml, '__propertyname__', key);
+            propertiesHTML = this.formatStringToHTMLInArray(propertiesHTML, '__propertype__', property["type"]);
+            propertiesHTML = property["maxLength"] ? this.formatStringToHTMLInArray(propertiesHTML, '__propertymore__', `Max length: ${property["maxLength"]}`) : this.formatStringToHTMLInArray(propertiesHTML, '__propertype__', "-");
+            propertiesHTML = property["minLength"] ? this.formatStringToHTMLInArray(propertiesHTML, '__propertymore__', `Min length: ${property["minLength"]}`) : this.formatStringToHTMLInArray(propertiesHTML, '__propertype__', "-");
+            propertiesHTML = this.formatStringToHTML(propertiesHTML, '__propertydesc__', property["description"]);
+            schemasHTML.querySelector(".schemas_property_tbody").appendChild(propertiesHTML);
+          }
+        }
+      }
+    }
+    this.toggleSchemas();
+  }
+  toggleSchemas() {
+    const schemas = document.querySelectorAll(".schemas_list_item");
+
+    schemas.forEach((item, index) => {
+      const header = item.querySelector(".schemas_header"),
+        body = item.querySelector(".schemas_content");
+
+        // body
       const height = body.getBoundingClientRect().height;
       body.setAttribute("data-height", height);
       body.style.height = "0px";

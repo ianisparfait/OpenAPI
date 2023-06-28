@@ -198,3 +198,86 @@ h1, h2, h3, h4 {
 .item_inner_responses table tbody tr td.desc .example {
   margin-top: 1rem;
 }
+
+/* === SCHEMAS === */
+.schemas {
+  border: 1px solid rgba(59,65,81,.3);
+  border-radius: 4px;
+  margin: 30px 0;
+}
+.schemas .header {
+  border-bottom: 1px solid rgba(59,65,81,.3);
+  align-items: center;
+  color: #606060;
+  cursor: pointer;
+  display: flex;
+  font-family: sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 25px;
+  transition: all .2s;
+}
+
+.schemas_list_item {
+  margin: 20px;
+  background: rgba(0,0,0,.07);
+  border-radius: 4px;
+  position: relative;
+  transition: all .5s;
+}
+.schemas_header {
+  display: flex;
+  align-items: center;
+  padding: 25px;
+  cursor: pointer;
+}
+.schemas_header i {
+  margin-left: 15px;
+}
+.schemas_content {
+  overflow: hidden;
+}
+.schemas_content .desc_entity {
+  margin-left: 25px;
+  font-size: 13px;
+  color: var(--globalColor);
+  transform: translate(0px, -5%);
+  font-style: italic;
+}
+.schemas_property {
+  padding: 25px;
+  padding-top: 10px;
+  display: flex;
+  margin-bottom: 15px;
+}
+.schemas_property .left {
+  min-width: 150px;
+}
+.schemas_property_tbody tr td:first-of-type {
+  min-width: 120px;
+  font-size: 14px;
+  vertical-align: top;
+}
+.schemas_property_tbody tr td.infos {
+  color: #3b4151;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+}
+.schemas_property_tbody tr td.infos .type, .schemas_property_tbody tr td.infos .more {
+  margin-bottom: 5px;
+}
+
+.schemas_property_tbody tr td.infos .type {
+  color: #55a;
+}
+.schemas_property_tbody tr td.infos .more {
+  color: #6b6b6b;
+  font-style: italic;
+}
+.schemas_property_tbody tr td.infos .desc {
+  word-break: break-word;
+  margin: 0 0 2em 0;
+}
