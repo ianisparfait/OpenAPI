@@ -71,7 +71,6 @@ class OpenAPI{
               </div>
             </div>
             <div class="section_content_item_body">
-              <div class="section_content_item_body_infos"></div>
               <div class="section_content_item_body_responses">
                 <div class="header_inner_section">Responses</div>
                 <div class="item_inner_responses">
@@ -83,9 +82,7 @@ class OpenAPI{
                         <th></th>
                       </tr>
                     </thead>
-                    <tbody class="b">
-
-                    </tbody>
+                    <tbody class="b"></tbody>
                   </table>
                 </div>
               </div>
@@ -94,20 +91,43 @@ class OpenAPI{
         </div>
       </div>
     `;
+    const Phtml = `
+      <div class="section_content_item_body_parameters">
+        <div class="header_inner_section">Parameters</div>
+        <div class="item_inner_parameters">
+          <table class="item_inner_responses_table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th class="pl">Description</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody class="bp"></tbody>
+          </table>
+        </div>
+      </div>
+    `;
 
     for (let index = 0; index < this.sections.length; index++) {
       const section = this.sections[index];
-      let sectionHTML = this.formatStringToHTML(Shtml, '__title__', section["title"]);
+      let sectionHTML = this.formatStringToHTML(Shtml, "__title__", section["title"]);
       this.wrapperSection.appendChild(sectionHTML);
 
       for (const key in section["content"]) {
         if (Object.hasOwnProperty.call(section["content"], key)) {
           const value = section["content"][key];
           if (!Array.isArray(value)) {
-            let contentHTML = this.formatStringToHTMLAllReferences(Chtml, '__method__', key);
-            contentHTML = this.formatStringToHTMLInArray(contentHTML, '__description__', value["Description"]);
-            contentHTML = this.formatStringToHTML(contentHTML, '__path__', value["exact_route"]);
+            let contentHTML = this.formatStringToHTMLAllReferences(Chtml, "__method__", key);
+            contentHTML = this.formatStringToHTMLInArray(contentHTML, "__description__", value["Description"]);
+            contentHTML = this.formatStringToHTML(contentHTML, "__path__", value["exact_route"]);
             sectionHTML.appendChild(contentHTML);
+
+            if (value["parameters"]) {
+              let paramHTML = this.formatStringToHTMLWithoutReplacing(Phtml);
+              contentHTML.querySelector(".section_content_item_body").prepend(paramHTML);
+              this.makeParameters(value["parameters"], contentHTML, section["title"], key);
+            }
 
             const resValue = value["responses"];
             const tableBODY = contentHTML.querySelector("table .b");
@@ -120,6 +140,12 @@ class OpenAPI{
               contentHTML = this.formatStringToHTML(contentHTML, '__path__', element["exact_route"]);
               sectionHTML.appendChild(contentHTML);
 
+              if (element["parameters"]) {
+                let paramHTML = this.formatStringToHTMLWithoutReplacing(Phtml);
+                contentHTML.querySelector(".section_content_item_body").prepend(paramHTML);
+                this.makeParameters(element["parameters"], contentHTML, section["title"], key);
+              }
+
               const resValue = element["responses"];
               const tableBODY = contentHTML.querySelector("table .b");
               this.makeTableBody(resValue, tableBODY);
@@ -129,6 +155,20 @@ class OpenAPI{
       }
     }
     this.toggleSection();
+  }
+  makeParameters(parameters, contentHTML, name, method) {
+    const toAppend = contentHTML.querySelector("table .bp");
+
+    for (let index = 0; index < parameters.length; index++) {
+      const param = parameters[index];
+      const data = {
+        name: param["name"],
+        isRequired: param["required"],
+        type: param["schema"]["type"],
+        in: param["in"],
+      };
+      this.makeTableBodyParams(data, toAppend, name, method);
+    }
   }
   toggleSection() {
     const section = document.querySelectorAll(".section_content_item_inner");
@@ -263,6 +303,18 @@ class OpenAPI{
       }
     }
   }
+  makeTableBodyParams(data, body, name, method) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <span class="flex"><span>${data["name"]}</span> ${data["isRequired"] ? `<span class="required">*&nbsp;Required</span>` : `` }</span>
+        <span class="type">${data["type"]}</span>
+        <span class="in">(${data["in"]})</span>
+      </td>
+      <td class="desc param">ID of ${name} to ${method}</td>
+    `;
+    body.appendChild(tr);
+  }
 
   // Utils html
   formatStringToHTMLAllReferences(stringHTML, varToReplace, value) {
@@ -282,6 +334,9 @@ class OpenAPI{
       .replace(varToReplace, value)
 
     return this.writeHTML(newSTR);
+  }
+  formatStringToHTMLWithoutReplacing(stringHTML) {
+    return this.writeHTML(stringHTML);
   }
   writeHTML(html) {
     const template = document.createElement("template");
